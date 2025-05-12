@@ -9,10 +9,26 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide")
 st.title("SEO 키워드 2x2 매트릭스 대시보드")
 
+# 기본 샘플 데이터 경로
+SAMPLE_DATA_PATH = os.path.join(os.path.dirname(__file__), "sample_data", "sample.xlsx")
+
+# 2. 데이터 통합 및 전처리
+dfs = []
+
+# 샘플 데이터 로드
+if os.path.exists(SAMPLE_DATA_PATH):
+    df = pd.read_excel(SAMPLE_DATA_PATH)
+    dfs.append(df)
+    st.info("기본 샘플 데이터를 사용합니다.")
+else:
+    st.error(f"샘플 데이터 파일을 찾을 수 없습니다: {SAMPLE_DATA_PATH}")
+    st.stop()
+
 st.markdown("""
 #### 1. 연관 키워드 엑셀 파일 여러 개 업로드
 - 네이버 키워드 도구에서 추출한 여러 엑셀 파일을 업로드하세요.
 - 파일 내 '연관키워드' 컬럼이 반드시 존재해야 합니다.
+- 파일을 업로드하면 현재 표시된 샘플 데이터가 대체됩니다.
 """)
 
 uploaded_files = st.file_uploader(
@@ -21,15 +37,13 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-if not uploaded_files:
-    st.info("엑셀 파일을 업로드하면 분석이 시작됩니다.")
-    st.stop()
+if uploaded_files:
+    dfs = []  # 샘플 데이터 초기화
+    for file in uploaded_files:
+        df = pd.read_excel(file)
+        dfs.append(df)
+    st.info("업로드된 파일로 데이터가 업데이트되었습니다.")
 
-# 2. 데이터 통합 및 전처리
-dfs = []
-for file in uploaded_files:
-    df = pd.read_excel(file)
-    dfs.append(df)
 combined_df = pd.concat(dfs, ignore_index=True)
 
 # 숫자 컬럼 전처리
