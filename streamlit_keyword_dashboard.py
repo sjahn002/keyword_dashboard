@@ -5,9 +5,152 @@ import re
 import os
 import plotly.graph_objects as go
 import io
+import streamlit.components.v1 as components
 
 # 1. 파일 업로드
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+
+# CSS 스타일 추가
+st.markdown("""
+<style>
+    /* 전체적인 폰트 및 여백 설정 */
+    .stApp {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        line-height: 1.6;
+    }
+    
+    /* 제목 스타일 */
+    h1 {
+        font-size: clamp(1.5rem, 4vw, 2.5rem) !important;
+        font-weight: 700 !important;
+        margin-bottom: 1.5rem !important;
+        color: #1E1E1E !important;
+    }
+    
+    h2 {
+        font-size: clamp(1.2rem, 3vw, 2rem) !important;
+        font-weight: 600 !important;
+        margin: 1.5rem 0 1rem 0 !important;
+        color: #2C3E50 !important;
+    }
+    
+    h3 {
+        font-size: clamp(1rem, 2.5vw, 1.5rem) !important;
+        font-weight: 600 !important;
+        margin: 1rem 0 !important;
+        color: #34495E !important;
+    }
+    
+    /* 메트릭 카드 스타일 */
+    .stMetric {
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .stMetric:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* 데이터프레임 스타일 */
+    .dataframe {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    }
+    
+    .dataframe th {
+        background-color: #F8F9FA !important;
+        color: #2C3E50 !important;
+        font-weight: 600 !important;
+        padding: 12px !important;
+    }
+    
+    .dataframe td {
+        padding: 10px !important;
+        color: #4A4A4A !important;
+    }
+    
+    /* 버튼 스타일 */
+    .stButton>button {
+        background-color: #4A90E2 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        border: none !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        background-color: #357ABD !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* 파일 업로더 스타일 */
+    .stFileUploader {
+        border: 2px dashed #E0E0E0 !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        background-color: #F8F9FA !important;
+    }
+    
+    /* 알림 메시지 스타일 */
+    .stAlert {
+        border-radius: 8px !important;
+        padding: 1rem !important;
+    }
+    
+    /* 구분선 스타일 */
+    hr {
+        margin: 2rem 0 !important;
+        border: none !important;
+        border-top: 1px solid #E0E0E0 !important;
+    }
+    
+    /* 반응형 컨테이너 */
+    .stContainer {
+        padding: 1rem !important;
+    }
+    
+    @media (max-width: 768px) {
+        .stContainer {
+            padding: 0.5rem !important;
+        }
+        
+        .stMetric {
+            padding: 0.75rem !important;
+        }
+        
+        /* 모바일에서 텍스트 크기 조정 */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        h2 {
+            font-size: 1.2rem !important;
+        }
+        
+        h3 {
+            font-size: 1rem !important;
+        }
+        
+        /* 모바일에서 데이터프레임 스타일 조정 */
+        .dataframe {
+            font-size: 0.9rem !important;
+        }
+        
+        .dataframe th, .dataframe td {
+            padding: 8px !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("SEO 키워드 분석기")
 
 # 기본 샘플 데이터 경로
@@ -29,19 +172,22 @@ st.markdown("""
 #### 대시보드 소개
 본 대시보드는 네이버 검색 데이터를 활용한 키워드 분석 솔루션입니다. 키워드의 검색량, 클릭률, 경쟁도 등 핵심 지표를 분석하여 전략적 의사결정을 지원하며, 자동화된 키워드 분류와 시각화 기능을 통해 효율적인 SEO 전략을 수립할 수 있습니다.
 
+[📚 상세 사용 가이드 보러가기](https://docs.google.com/document/d/1AVVoIKKelMUVIJydk6Xzmw1e2ibxBjDi4Le-VVoDch8/edit?usp=sharing)
+
 #### 네이버 키워드 도구 안내
-네이버 키워드 도구는 네이버 검색에서 자주 사용되는 키워드와 관련 검색량, 경쟁도 등의 정보를 제공하는 분석 도구입니다. 본 도구에서 수집한 데이터를 대시보드에 업로드하시면 자동으로 심층 분석이 진행됩니다.
+네이버 키워드 도구는 네이버 검색에서 자주 사용되는 키워드와 관련 검색량, 경쟁도 등의 정보를 제공하는 분석 도구입니다. 네이버 키워드 도구에서서 수집한 데이터를 대시보드에 업로드하시면 자동으로 분석이 진행됩니다.
 
 #### 데이터 수집 방법
-1. 네이버 광고 센터(https://manage.searchad.naver.com) 에 접속합니다.
-2. '도구' 메뉴에서 '키워드 도구'를 선택합니다.
-3. 분석을 원하는 키워드를 입력합니다.
-4. '다운로드' 버튼을 클릭하여 데이터를 저장합니다.
+1. 성과형 디스플레이 광고 계정으로 로그인합니다.  
+2. 네이버 광고 센터(https://manage.searchad.naver.com) 에 접속합니다.
+3. '도구' 메뉴에서 '키워드 도구'를 선택합니다.
+4. 분석을 원하는 키워드를 입력합니다.
+5. '다운로드' 버튼을 클릭하여 데이터를 저장합니다.
 
 #### 대시보드 활용 가이드
-1. 수집한 엑셀 파일을 하단 업로드 영역에 드래그앤드롭하거나 선택합니다.
+1. 수집한 엑셀 파일을 하단 업로드 영역에 드래그 앤 드롭하거나 'Browse files' 버튼을 클릭하여 직접 선택합니다.
 2. 여러 파일을 동시에 업로드하실 수 있으며, 중복 키워드는 자동으로 제거됩니다.
-3. 업로드된 데이터는 다음과 같이 자동 분석됩니다.:
+3. 업로드된 데이터는 다음과 같이 자동 분석됩니다.
    - 키워드별 검색량, 클릭률, 경쟁도 분석
    - 카테고리별 키워드 분류 및 통계 산출
    - 카테고리별 주요 키워드 추출
@@ -211,6 +357,16 @@ classification_stats = gb.agg({
 classification_stats.columns = ['평균_검색수', '키워드_개수', '평균_클릭수', '평균_클릭률_PC', '평균_클릭률_모바일', '평균_노출광고수']
 classification_stats = classification_stats.reset_index()
 
+# importance_order와 labels_kr 키 일치 보장
+importance_order = [
+    '전략적 Sweet Spot',
+    '특화 영역',
+    '타겟 경쟁 영역',
+    '확장 가능 키워드',
+    '정크 키워드',
+    '타겟 외 경쟁 영역',
+    '미분류'
+]
 labels_kr = {
     '전략적 Sweet Spot': '전략적 Sweet Spot\n(Purple Ocean)',
     '특화 영역': '특화 키워드\n(Blue Ocean)',
@@ -220,30 +376,71 @@ labels_kr = {
     '타겟 외 경쟁 영역': '타겟 외 경쟁 영역',
     '미분류': '미분류'
 }
-classification_stats['label'] = classification_stats['키워드_분류_질적'].map(labels_kr)
+
+# 색상 팔레트 업데이트 - 더 밝고 선명한 색상으로 변경
 color_map = {
-    '전략적 Sweet Spot': '#b39ddb',
-    '특화 영역': '#90caf9',
-    '타겟 경쟁 영역': '#ef9a9a',
-    '확장 가능 키워드': '#fff59d',
-    '정크 키워드': '#bdbdbd',
-    '타겟 외 경쟁 영역': '#ffe082',
-    '미분류': '#eeeeee'
+    '전략적 Sweet Spot': '#7B68EE',  # 밝은 보라색
+    '특화 영역': '#00CED1',          # 밝은 청록색
+    '타겟 경쟁 영역': '#FF6B6B',     # 밝은 산호색
+    '확장 가능 키워드': '#FFD700',    # 골드
+    '정크 키워드': '#B0C4DE',        # 밝은 회색
+    '타겟 외 경쟁 영역': '#FFA07A',   # 밝은 연어색
+    '미분류': '#F0F8FF'              # 매우 밝은 하늘색
 }
-classification_stats['color'] = classification_stats['키워드_분류_질적'].map(color_map)
 
 # 예시용 분류명 매핑 (실제 분류명/통계로 대체)
 area_defs = [
     # x0, y0, x1, y1, 분류명, 색상
-    [0.5, 0.75, 1, 1, '타겟 경쟁 영역', '#ffebee'],
-    [0.5, 0.5, 1, 0.75, '전략적 Sweet Spot', '#ede7f6'],
-    [0.5, 0, 1, 0.5, '특화 영역', '#e3f2fd'],
-    [0.25, 0.5, 0.5, 1, '확장 가능 키워드', '#fffde7'],
-    [0, 0.5, 0.25, 1, '타겟 외 경쟁 영역', '#ffe082'],
-    [0, 0, 0.5, 0.5, '정크 키워드', '#e0e0e0'],
+    [0.5, 0.75, 1, 1, '타겟 경쟁 영역', '#FFF0F0'],
+    [0.5, 0.5, 1, 0.75, '전략적 Sweet Spot', '#F0F0FF'],
+    [0.5, 0, 1, 0.5, '특화 영역', '#F0FFFF'],
+    [0.25, 0.5, 0.5, 1, '확장 가능 키워드', '#FFFFF0'],
+    [0, 0.5, 0.25, 1, '타겟 외 경쟁 영역', '#FFF8F0'],
+    [0, 0, 0.5, 0.5, '정크 키워드', '#F8F8F8'],
 ]
 
-# 각 영역별 중앙 좌표, 텍스트, hovertext 준비
+# JS로 화면 폭 감지 및 session_state에 저장
+if 'is_narrow' not in st.session_state:
+    st.session_state['is_narrow'] = True  # 기본값을 좁은 모드로 설정
+
+# JavaScript 디버깅을 위한 컴포넌트
+components.html(
+    """
+    <script>
+    function updateStreamlitState(isNarrow) {
+        const message = {
+            type: 'streamlit:setComponentValue',
+            value: isNarrow
+        };
+        window.parent.postMessage(message, '*');
+    }
+
+    function checkWidth() {
+        const width = window.innerWidth;
+        const isNarrow = width < 900;
+        updateStreamlitState(isNarrow);
+    }
+
+    // 초기 실행
+    checkWidth();
+
+    // 리사이즈 이벤트 리스너
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(checkWidth, 100);
+    });
+    </script>
+    """,
+    height=0,
+)
+
+# 상세 정보 보기 버튼
+if st.button("상세 정보 보기" if st.session_state['is_narrow'] else "간단 정보 보기"):
+    st.session_state['is_narrow'] = not st.session_state['is_narrow']
+    st.rerun()
+
+# 레이아웃 업데이트
 data = []
 for x0, y0, x1, y1, area_name, color in area_defs:
     # 해당 영역의 통계 데이터 가져오기
@@ -259,21 +456,31 @@ for x0, y0, x1, y1, area_name, color in area_defs:
     # 해당 영역의 세부 카테고리와 키워드 개수 계산
     area_categories = final_df[final_df['키워드_분류_질적'] == area_name].groupby('키워드_상세분류').size()
     category_text = "<br>".join([f"{cat}: {count:,}개" for cat, count in area_categories.items()])
-    
-    # 영역 내 텍스트 구성
-    area_text = f"<b><span style='font-size: 24px; color: black;'>{area_name}</span></b><br>"
-    area_text += f"키워드: {stat['키워드_개수']:,}개<br>"
-    area_text += f"검색수: {stat['평균_검색수']:,}회<br>"
-    area_text += f"클릭수: {stat['평균_클릭수']:,}회<br>"
-    area_text += f"클릭률: {stat['평균_클릭률_PC']:.1f}%<br>"
-    area_text += f"광고수: {stat['평균_노출광고수']:,}개<br><br>"
-    area_text += f"<b>세부 카테고리:</b><br>{category_text}"
-    
+
+    # 분기: 넓은 화면(폭 충분) vs 좁은 화면(폭 부족)
+    if st.session_state.get('is_narrow', False):
+        # 좁은 화면: 간단한 정보만 표시
+        area_text = f"<b><span style='font-size: 16px; color: #2C3E50;'>{area_name}</span></b><br>"
+        area_text += f"키워드: {stat['키워드_개수']:,}개<br>"
+        area_text += f"검색수: {stat['평균_검색수']:,}회"
+        hover_text = f"<b>{area_name}</b><br>키워드: {stat['키워드_개수']:,}개<br>검색수: {stat['평균_검색수']:,}회<br>클릭수: {stat['평균_클릭수']:,}회<br>클릭률: {stat['평균_클릭률_PC']:.1f}%<br>광고수: {stat['평균_노출광고수']:,}개<br><b>세부 카테고리:</b><br>{category_text}"
+    else:
+        # 넓은 화면: 모든 정보 표시
+        area_text = f"<b><span style='font-size: 20px; color: #2C3E50;'>{area_name}</span></b><br>"
+        area_text += f"키워드: {stat['키워드_개수']:,}개<br>"
+        area_text += f"검색수: {stat['평균_검색수']:,}회<br>"
+        area_text += f"클릭수: {stat['평균_클릭수']:,}회<br>"
+        area_text += f"클릭률: {stat['평균_클릭률_PC']:.1f}%<br>"
+        area_text += f"광고수: {stat['평균_노출광고수']:,}개<br><br>"
+        area_text += f"<b>세부 카테고리:</b><br>{category_text}"
+        hover_text = ""
+
     data.append(dict(
         x=(x0+x1)/2, y=(y0+y1)/2, x0=x0, y0=y0, x1=x1, y1=y1,
-        area_name=area_name, color=color, area_text=area_text
+        area_name=area_name, color=color, area_text=area_text, hover_text=hover_text
     ))
 
+# 레이아웃 업데이트
 fig = go.Figure()
 
 # 사각형 영역 그리기
@@ -281,7 +488,7 @@ for d in data:
     fig.add_shape(
         type="rect",
         x0=d['x0'], y0=d['y0'], x1=d['x1'], y1=d['y1'],
-        line=dict(color="black", width=2),
+        line=dict(color="#E0E0E0", width=1),
         fillcolor=d['color'],
         layer="below"
     )
@@ -293,29 +500,63 @@ fig.add_trace(go.Scatter(
     text=[d['area_text'] for d in data],
     mode="text",
     textposition="middle center",
-    hoverinfo="none",
+    hoverinfo="text",
+    hovertext=[d['hover_text'] for d in data],
     marker=dict(opacity=0),
     showlegend=False,
-    textfont=dict(size=14)  # 텍스트 크기 조정
+    textfont=dict(size=14, color="#2C3E50")
 ))
 
-fig.update_xaxes(
-    showticklabels=False, showgrid=False, zeroline=False,
-    range=[0, 1], title_text="타겟 관련성(아이덴티티) →",
-    title_font=dict(size=20)
-)
-fig.update_yaxes(
-    showticklabels=False, showgrid=False, zeroline=False,
-    range=[0, 1], title_text="↑ 확장성(트래픽)",
-    title_font=dict(size=20)
-)
+# 레이아웃 업데이트
 fig.update_layout(
-    width=1200, height=1200,  # 그래프 크기 증가
+    width=1200 if not st.session_state.get('is_narrow', False) else 600,
+    height=1200 if not st.session_state.get('is_narrow', False) else 600,
     margin=dict(l=40, r=40, t=40, b=40),
-    plot_bgcolor="white"
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    font=dict(
+        family="Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif",
+        size=14,
+        color="#2C3E50"
+    ),
+    title=dict(
+        text="2x2 매트릭스 보기",
+        font=dict(
+            size=24 if not st.session_state.get('is_narrow', False) else 18,
+            color="#1E1E1E"
+        )
+    ),
+    hovermode="closest",
+    hoverlabel=dict(
+        bgcolor="white",
+        font_size=14,
+        font_family="Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif"
+    )
 )
 
-st.plotly_chart(fig, use_container_width=True)
+# 축 업데이트
+fig.update_xaxes(
+    showticklabels=False,
+    showgrid=False,
+    zeroline=False,
+    range=[0, 1],
+    title_text="타겟 관련성(아이덴티티) →",
+    title_font=dict(size=20, color="#2C3E50"),
+    linecolor="#E0E0E0"  # 축 선 색상을 연한 회색으로 변경
+)
+
+fig.update_yaxes(
+    showticklabels=False,
+    showgrid=False,
+    zeroline=False,
+    range=[0, 1],
+    title_text="↑ 확장성(트래픽)",
+    title_font=dict(size=20, color="#2C3E50"),
+    linecolor="#E0E0E0"  # 축 선 색상을 연한 회색으로 변경
+)
+
+# 반응형 레이아웃을 위한 컨테이너 설정
+st.plotly_chart(fig, use_container_width=True, config={'responsive': True})
 
 # 7. 분류별 샘플 키워드 표
 st.subheader("분류별 샘플 키워드")
@@ -345,17 +586,6 @@ sort_column_map = {
     "월평균노출 광고수": "월평균노출 광고수"
 }
 
-# 중요도 순서 정의
-importance_order = [
-    '전략적 Sweet Spot',
-    '특화 영역',
-    '타겟 경쟁 영역',
-    '확장 가능 키워드',
-    '정크 키워드',
-    '타겟 외 경쟁 영역',
-    '미분류'
-]
-
 # 각 분류별로 데이터 표시 (중요도 순서대로)
 for category in importance_order:
     category_df = final_df[final_df['키워드_분류_질적'] == category]
@@ -368,7 +598,7 @@ for category in importance_order:
         avg_ads = category_df['월평균노출 광고수'].mean()
         
         # 통계 표시
-        st.markdown(f"### {labels_kr.get(category, category)}")
+        st.markdown(f"### {labels_kr.get(category, '')}")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("평균 검색수", f"{avg_search:,.0f}")
